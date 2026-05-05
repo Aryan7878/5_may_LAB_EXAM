@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL Shortener</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    background: #000;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    padding: 30px;
+    width: 100%;
+    max-width: 400px;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #fff;
+    background: #000;
+    color: #fff;
+}
+
+button {
+    padding: 10px;
+    border: 1px solid #fff;
+    background: #fff;
+    color: #000;
+    cursor: pointer;
+}
+
+.result, .error, .loading {
+    margin-top: 20px;
+    display: none;
+    font-size: 14px;
+}
+
+.show {
+    display: block;
+}
+
+.result-url {
+    word-break: break-all;
+    border: 1px solid #fff;
+    padding: 8px;
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>URL Shortener</h1>
+    <p>Shorten your link</p>
+
+    <div class="input-group">
+        <input type="url" id="urlInput" placeholder="Enter URL">
+        <button id="shortenBtn">Go</button>
+    </div>
+
+    <div class="loading" id="loading">Loading...</div>
+    <div class="error" id="error"></div>
+
+    <div class="result" id="result">
+        <div id="resultUrl" class="result-url"></div>
+        <button id="copyBtn">Copy</button>
+    </div>
+</div>
+
+<script>
+const urlInput = document.getElementById('urlInput');
+const shortenBtn = document.getElementById('shortenBtn');
+const result = document.getElementById('result');
+const resultUrl = document.getElementById('resultUrl');
+const copyBtn = document.getElementById('copyBtn');
+const errorDiv = document.getElementById('error');
+const loading = document.getElementById('loading');
+
+shortenBtn.onclick = async () => {
+    const url = urlInput.value.trim();
+    if (!url) return showError('Enter URL');
+
+    loading.classList.add('show');
+    result.classList.remove('show');
+    errorDiv.classList.remove('show');
+
+    try {
+        const res = await fetch('/shorten', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ originalUrl: url })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        resultUrl.textContent = data.shortUrl;
+        result.classList.add('show');
+    } catch (e) {
+        showError(e.message);
+    }
+
+    loading.classList.remove('show');
+};
+
+copyBtn.onclick = () => {
+    navigator.clipboard.writeText(resultUrl.textContent);
+};
+
+function showError(msg) {
+    errorDiv.textContent = msg;
+    errorDiv.classList.add('show');
+}
+</script>
+
+</body>
+</html>
